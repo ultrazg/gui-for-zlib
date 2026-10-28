@@ -1,0 +1,7 @@
+{
+  "name": "GUI for zlib",
+  "identifier": "io.github.gui-for-zlib",
+  "version": "0.1.0",
+  "out": "build",
+  "urlSchemes": ["zlib"]
+}
