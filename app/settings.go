@@ -119,7 +119,13 @@ func (a *App) settingsPage(c *ui.Context) {
 
 		ui.Divider(c)
 		ui.Text(c, "关于").Bold()
-		ui.Text(c, "GUI for zlib，一款 Z-Library 桌面客户端。").FontSize(12).TextColor(t.TextMuted)
+		// The upstream project's name is a link inside the sentence; the
+		// surrounding text keeps the line's dimmed style.
+		ui.RichText(c).FontSize(12).TextColor(t.TextMuted).Children(func() {
+			ui.Text(c, "一款基于 ")
+			ui.Link(c, "heartleo/zlib", core.UpstreamURL)
+			ui.Text(c, " 的 Z-Library 桌面客户端。")
+		})
 		// The version line is skipped in builds without package info (a bare
 		// `go run .` or a test binary); mygo dev/build inject it from mygo.json.
 		if v := mygo.App.Version(); v != "" {

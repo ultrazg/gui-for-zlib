@@ -49,12 +49,12 @@ func TestUpdateCheckResults(t *testing.T) {
 	}
 	a.finishUpdateCheck(nil, errors.New("GitHub 请求受限"))
 	tt.Frame()
-	if !a.updateCheck.Failed || a.updateCheck.Open || !tt.HasText("检查更新失败：GitHub 请求受限") {
-		t.Fatalf("failed state: %+v", a.updateCheck)
+	if a.updateCheck.Open || !tt.HasText("检查更新失败：GitHub 请求受限") {
+		t.Fatalf("failed state: %+v, texts: %q", a.updateCheck, tt.Texts())
 	}
 	a.finishUpdateCheck(&core.Release{TagName: "v0.10.0"}, nil)
 	tt.Frame()
-	if a.updateCheck.Failed || !a.updateCheck.Open || !tt.HasText("此版本暂无更新说明") {
+	if !a.updateCheck.Open || !tt.HasText("此版本暂无更新说明") {
 		t.Fatalf("retry state: %+v, texts: %q", a.updateCheck, tt.Texts())
 	}
 }

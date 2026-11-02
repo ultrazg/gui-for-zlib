@@ -14,7 +14,6 @@ import (
 type updateCheckState struct {
 	Loading bool
 	Open    bool
-	Failed  bool
 	Text    string
 	Current string
 	Release core.Release
@@ -31,11 +30,7 @@ func (a *App) updateCheckField(c *ui.Context) {
 		}
 	})
 	if u.Text != "" {
-		color := t.Success
-		if u.Failed {
-			color = t.Danger
-		}
-		ui.Text(c, u.Text).FontSize(12).TextColor(color)
+		ui.Text(c, u.Text).FontSize(12).TextColor(t.Success)
 	}
 }
 
@@ -44,17 +39,17 @@ func (a *App) startUpdateCheck() {
 	if u.Loading {
 		return
 	}
-	u.Text, u.Failed, u.Open = "", false, false
+	u.Text, u.Open = "", false
 	u.Current = strings.TrimSpace(mygo.App.Version())
 	if u.Current == "" {
-		u.Text, u.Failed = "当前构建未提供版本号，无法检查更新。", true
+		a.toast("当前构建未提供版本号，无法检查更新。")
 		return
 	}
 	checker, ok := a.svc.(interface {
 		CheckForUpdate(context.Context, string) (*core.Release, error)
 	})
 	if !ok {
-		u.Text, u.Failed = "当前后端不支持检查更新。", true
+		a.toast("当前后端不支持检查更新。")
 		return
 	}
 	u.Loading = true
@@ -73,11 +68,11 @@ func (a *App) startUpdateCheck() {
 // Called on the UI thread after the background request finishes.
 func (a *App) finishUpdateCheck(release *core.Release, err error) {
 	u := &a.updateCheck
-	u.Loading, u.Open, u.Failed = false, false, err != nil
+	u.Loading, u.Open = false, false
 	u.Release = core.Release{}
 	switch {
 	case err != nil:
-		u.Text = "检查更新失败：" + friendlyError(err)
+		a.toast("检查更新失败：" + friendlyError(err))
 	case release == nil:
 		u.Text = "当前已是最新版本（" + u.Current + "）。"
 	default:

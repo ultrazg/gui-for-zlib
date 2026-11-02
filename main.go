@@ -47,7 +47,7 @@ func main() {
 		}
 
 		a.Attach(mygo.NewWindow(mygo.WindowOptions{
-			Title:     "zlib",
+			Title:     "GUI for zlib",
 			Width:     1180,
 			Height:    760,
 			MinWidth:  900,

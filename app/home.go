@@ -9,7 +9,7 @@ import (
 func (a *App) homePage(c *ui.Context) {
 	t := c.Theme()
 	ui.Scroll(c).Grow(1).Padding(24, 28).Gap(18).Children(func() {
-		ui.Text(c, "欢迎使用 zlib").FontSize(30).Bold()
+		ui.Text(c, "欢迎使用 GUI for zlib").FontSize(30).Bold()
 
 		ui.Row(c).Gap(10).Children(func() {
 			if ui.PrimaryButton(c, "去搜索").Clicked() {

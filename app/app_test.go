@@ -109,6 +109,17 @@ func TestSettingsAbout(t *testing.T) {
 	if !tt.HasText("GitHub") {
 		t.Errorf("texts %q do not show the project homepage link", tt.Texts())
 	}
+	if !tt.HasText("heartleo/zlib") {
+		t.Errorf("texts %q do not credit the upstream project", tt.Texts())
+	}
+	tt.Scroll(800, 600, 0, 1500)
+	if err := tt.Click("heartleo/zlib"); err != nil {
+		t.Fatal(err)
+	}
+	urls := tt.OpenedURLs()
+	if len(urls) != 1 || urls[0] != core.UpstreamURL {
+		t.Errorf("clicking heartleo/zlib opened %q, want %q", urls, core.UpstreamURL)
+	}
 	if !tt.HasText("检查更新") {
 		t.Errorf("texts %q do not show the update check button", tt.Texts())
 	}
@@ -303,7 +314,7 @@ func TestVibrancyLayout(t *testing.T) {
 	tt.SetVibrancy(true)
 	tt.Frame()
 
-	if !tt.HasText("欢迎使用 zlib") {
+	if !tt.HasText("欢迎使用 GUI for zlib") {
 		t.Errorf("texts %q do not show the home page under vibrancy", tt.Texts())
 	}
 	if err := tt.Click("设置"); err != nil {

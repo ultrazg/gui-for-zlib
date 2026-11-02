@@ -170,11 +170,11 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 	}
 	side.Children(func() {
 		if runtime.GOOS == "darwin" {
-			ui.Text(c, "zlib").FontSize(22).Bold().Padding(36, 18, 0, 18)
+			ui.Text(c, "zlib").FontSize(22).Bold().Padding(36, 18, 12, 18)
 		} else {
-			ui.Text(c, "zlib").FontSize(22).Bold().Padding(0, 18)
+			ui.Text(c, "GUI for zlib").FontSize(22).Bold().Padding(0, 18, 12, 18).TextColor(t.TextMuted)
 		}
-		ui.Text(c, "GUI for zlib").FontSize(12).TextColor(t.TextMuted).Padding(0, 18, 12)
+		// ui.Text(c, "GUI for zlib").FontSize(12).TextColor(t.TextMuted).Padding(0, 18, 12)
 
 		page := sidebarPageOf(a.path.Path())
 		nav := ui.Sidebar(c, &page, func() {

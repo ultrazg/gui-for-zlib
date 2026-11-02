@@ -12,7 +12,10 @@ import (
 )
 
 const (
-	ProjectURL       = "https://github.com/ultrazg/gui-for-zlib"
+	ProjectURL = "https://github.com/ultrazg/gui-for-zlib"
+	// UpstreamURL is the Z-Library CLI project this GUI is built on; the
+	// About page links to it.
+	UpstreamURL      = "https://github.com/heartleo/zlib"
 	latestReleaseURL = "https://api.github.com/repos/ultrazg/gui-for-zlib/releases/latest"
 	releaseTimeout   = 15 * time.Second
 	maxReleaseBytes  = 1 << 20
