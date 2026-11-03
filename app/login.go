@@ -148,7 +148,7 @@ func (a *App) loginModal(c *ui.Context) {
 			ui.Text(c, "登录 zlib").FontSize(20).Bold()
 			subtitle := "登录前会先探测当前镜像是否可用。"
 			if a.domain != "" {
-				subtitle = "镜像：" + a.domain + "；登录前会先探测是否可用。"
+				subtitle = "当前镜像：" + a.domain + "；登录前会先探测是否可用。"
 			}
 			ui.Text(c, subtitle).FontSize(12).TextColor(t.TextMuted)
 
@@ -170,17 +170,20 @@ func (a *App) loginModal(c *ui.Context) {
 			}
 
 			ui.Row(c).Gap(10).Justify(ui.End).AlignItems(ui.Center).Children(func() {
-				if a.login.Pending {
-					ui.Spinner(c)
-					ui.Text(c, "正在登录…").FontSize(12).TextColor(t.TextMuted)
-				}
+				ui.Link(c, "前往注册", core.RegistrationURL(a.domain))
 				if ui.Button(c, "导入 Cookie").Clicked() {
 					a.startCookieImport()
 				}
 				if ui.Button(c, "取消").Clicked() {
 					a.login.Open = false
 				}
-				if ui.PrimaryButton(c, "登录").Clicked() {
+				if ui.PrimaryButton(c, "").Disabled(a.login.Pending).Children(func() {
+					if a.login.Pending {
+						ui.Spinner(c)
+					} else {
+						ui.Text(c, "登录")
+					}
+				}).Clicked() {
 					a.startLogin()
 				}
 			})

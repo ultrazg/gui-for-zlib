@@ -63,6 +63,81 @@ func TestLoginValidation(t *testing.T) {
 	}
 }
 
+// Logout is gated by a confirmation dialog. Headless tests stub it (nil
+// means confirm); the real window shows a native message box.
+func TestLogoutConfirmation(t *testing.T) {
+	a, tt := newTester(t)
+	a.session = &core.Session{Email: "reader@example.com", Name: "reader"}
+	// State set behind the tester's back needs an explicit frame; input
+	// events build their own.
+	tt.Frame()
+
+	if !tt.HasText("退出登录") {
+		t.Fatalf("texts %q do not show the logout button", tt.Texts())
+	}
+
+	// Declining the dialog keeps the session.
+	confirmed := 0
+	a.confirmLogout = func() bool {
+		confirmed++
+		return false
+	}
+	if err := tt.Click("退出登录"); err != nil {
+		t.Fatal(err)
+	}
+	if a.session == nil {
+		t.Fatal("logged out although the confirmation was declined")
+	}
+	if confirmed != 1 {
+		t.Errorf("confirmation asked %d times, want 1", confirmed)
+	}
+
+	// Confirming drops the session.
+	a.confirmLogout = func() bool {
+		confirmed++
+		return true
+	}
+	if err := tt.Click("退出登录"); err != nil {
+		t.Fatal(err)
+	}
+	if a.session != nil {
+		t.Fatal("still signed in after a confirmed logout")
+	}
+	if confirmed != 2 {
+		t.Errorf("confirmation asked %d times total, want 2", confirmed)
+	}
+
+	// Without an attached window the default (nil) proceeds right away.
+	a.session = &core.Session{Email: "reader@example.com", Name: "reader"}
+	a.confirmLogout = nil
+	tt.Frame()
+	if err := tt.Click("退出登录"); err != nil {
+		t.Fatal(err)
+	}
+	if a.session != nil {
+		t.Fatal("headless logout with nil confirmation kept the session")
+	}
+}
+
+// The register affordance in the login modal opens the mirror's sign-up page.
+func TestLoginRegister(t *testing.T) {
+	a, tt := newTester(t)
+
+	if err := tt.Click("登录账户"); err != nil {
+		t.Fatal(err)
+	}
+	if !tt.HasText("前往注册") {
+		t.Fatalf("texts %q do not show the register link", tt.Texts())
+	}
+	if err := tt.Click("前往注册"); err != nil {
+		t.Fatal(err)
+	}
+	urls := tt.OpenedURLs()
+	if want := core.RegistrationURL(a.domain); len(urls) != 1 || urls[0] != want {
+		t.Errorf("register click opened %q, want %q", urls, want)
+	}
+}
+
 func TestSettingsPersist(t *testing.T) {
 	svc := &savingSvc{Demo: core.NewDemo()}
 	a, tt := newTesterWith(t, svc)

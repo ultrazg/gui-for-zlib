@@ -55,3 +55,12 @@ func CurrentDefaultDomain() string {
 func normalizeDomain(domain string) string {
 	return strings.TrimRight(strings.TrimSpace(domain), "/")
 }
+
+// RegistrationURL returns the sign-up page on a mirror, falling back to the
+// current default mirror when domain is empty.
+func RegistrationURL(domain string) string {
+	if domain == "" {
+		domain = CurrentDefaultDomain()
+	}
+	return domain
+}

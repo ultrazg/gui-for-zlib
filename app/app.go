@@ -41,6 +41,10 @@ type App struct {
 	// nil in tests, where Attach is never called, so completed jobs just
 	// toast instead of touching the system.
 	notify func(id, title, body string)
+	// confirmLogout asks the user before dropping the session. It stays nil
+	// in tests, where Attach is never called, so a headless logout proceeds
+	// without a dialog; the real window shows a native message box.
+	confirmLogout func() bool
 }
 
 // New builds the app with the given backend. main passes core.NewBackend();
@@ -80,6 +84,24 @@ func (a *App) Attach(win *mygo.Window) {
 	if a.notify == nil {
 		a.notify = func(id, title, body string) {
 			_ = mygo.NewNotification(mygo.NotificationOptions{ID: id, Title: title, Body: body}).Show()
+		}
+	}
+	if a.confirmLogout == nil {
+		a.confirmLogout = func() bool {
+			res, err := mygo.Dialog.Message(mygo.MessageOptions{
+				Parent:             a.win,
+				Type:               mygo.MessageQuestion,
+				Title:              "退出登录",
+				Message:            "确定要退出当前账号吗？",
+				Buttons:            []string{"取消", "退出登录"},
+				DefaultButton:      0,
+				CancelButton:       0,
+				DestructiveButtons: []int{1},
+			})
+			if err != nil {
+				return false
+			}
+			return res.Button == 1
 		}
 	}
 	if !a.search.Started {
@@ -170,11 +192,10 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 	}
 	side.Children(func() {
 		if runtime.GOOS == "darwin" {
-			ui.Text(c, "zlib").FontSize(22).Bold().Padding(36, 18, 12, 18)
+			ui.Text(c, "GUI for zlib").FontSize(22).Bold().Padding(36, 18, 12, 18).DragWindow()
 		} else {
-			ui.Text(c, "GUI for zlib").FontSize(22).Bold().Padding(0, 18, 12, 18).TextColor(t.TextMuted)
+			ui.Text(c, "GUI for zlib").FontSize(22).Bold().Padding(0, 18, 12, 18).TextColor(t.TextMuted).DragWindow()
 		}
-		// ui.Text(c, "GUI for zlib").FontSize(12).TextColor(t.TextMuted).Padding(0, 18, 12)
 
 		page := sidebarPageOf(a.path.Path())
 		nav := ui.Sidebar(c, &page, func() {
@@ -210,6 +231,9 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				ui.Text(c, a.session.Name).Bold()
 				ui.Text(c, a.session.Email).FontSize(12).TextColor(t.TextMuted).SingleLine()
 				if ui.Button(c, "退出登录").Clicked() {
+					if a.confirmLogout != nil && !a.confirmLogout() {
+						return
+					}
 					a.session = nil
 					a.resetAfterAuthChange()
 					a.search.Books = nil
