@@ -15,7 +15,7 @@ func TestView(t *testing.T) {
 	a := app.New(core.NewDemo())
 	tt := ui.NewTester(a.View, 1180, 760)
 
-	if !tt.HasText("欢迎使用 zlib") {
+	if !tt.HasText("欢迎使用 GUI for zlib") {
 		t.Fatalf("texts %q do not show the home page", tt.Texts())
 	}
 	if err := tt.Click("设置"); err != nil {
@@ -36,7 +36,7 @@ func TestViewWithRealBackend(t *testing.T) {
 	a := app.New(core.NewBackend())
 	tt := ui.NewTester(a.View, 1180, 760)
 
-	if !tt.HasText("欢迎使用 zlib") {
+	if !tt.HasText("欢迎使用 GUI for zlib") {
 		t.Fatalf("texts %q do not show the home page", tt.Texts())
 	}
 	if err := tt.Click("搜索"); err != nil {
