@@ -16,6 +16,10 @@ type Service interface {
 
 	Search(ctx context.Context, opt SearchOptions) (*BookPage, error)
 	Favorites(ctx context.Context, page, count int) (*BookPage, error)
+	// FavoriteStatus reads the current account's state, including when a list
+	// response omitted it. SetFavorite changes the account only after an action.
+	FavoriteStatus(ctx context.Context, book Book) (bool, error)
+	SetFavorite(ctx context.Context, id string, saved bool) error
 	History(ctx context.Context, page, count int) (*BookPage, error)
 	Recommended(ctx context.Context, page, count int) (*BookPage, error)
 	Popular(ctx context.Context, page, count int) (*BookPage, error)

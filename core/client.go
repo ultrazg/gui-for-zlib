@@ -308,6 +308,16 @@ func (c *Client) Logout() {
 // are passed through: the server's error text ("daily limit reached") must
 // reach the user unwrapped.
 func (c *Client) eapiRequest(ctx context.Context, method, path string, form url.Values) ([]byte, error) {
+	return c.doEAPIRequest(ctx, method, path, form, false)
+}
+
+// eapiMutation handles the EAPI's state-changing GET endpoints separately
+// from reads. They must not be cached or replayed on a stale pooled connection.
+func (c *Client) eapiMutation(ctx context.Context, path string) ([]byte, error) {
+	return c.doEAPIRequest(ctx, http.MethodGet, path, nil, true)
+}
+
+func (c *Client) doEAPIRequest(ctx context.Context, method, path string, form url.Values, mutation bool) ([]byte, error) {
 	domain, _ := c.domainSnapshot()
 	if domain == "" {
 		return nil, fmt.Errorf("no domain configured")
@@ -338,7 +348,22 @@ func (c *Client) eapiRequest(ctx context.Context, method, path string, form url.
 	req.Header.Set("User-Agent", defaultUserAgent)
 	c.addCredentialHeaders(req)
 
-	resp, err := c.httpClient.Do(req)
+	client := c.httpClient
+	if mutation {
+		req.Header.Set("Cache-Control", "no-cache, no-store")
+		req.Header.Set("Pragma", "no-cache")
+		// net/http can replay GETs after a reused connection fails. A fresh,
+		// single-use transport avoids that replay for this account action.
+		if transport, ok := client.Transport.(*http.Transport); ok {
+			transport = transport.Clone()
+			transport.DisableKeepAlives = true
+			defer transport.CloseIdleConnections()
+			copy := *client
+			copy.Transport = transport
+			client = &copy
+		}
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		if errors.Is(err, ErrRedirectLoop) {
 			return nil, err

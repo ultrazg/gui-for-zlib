@@ -31,6 +31,8 @@ type Book struct {
 	Pages       int
 	DownloadURL string
 	Date        string
+	// Saved is the account's favorite state. Nil means the response omitted it.
+	Saved *bool
 }
 
 // Key is the stable identity used by lists and downloads: id:hash.

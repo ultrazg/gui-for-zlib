@@ -57,7 +57,15 @@ func (c *Client) MostPopular(ctx context.Context, page, count int) (*BookPage, e
 
 // SavedBooks maps GET /eapi/user/book/saved (the favorites page).
 func (c *Client) SavedBooks(ctx context.Context, page, count int) (*BookPage, error) {
-	return c.feed(ctx, pathSaved, page, count)
+	res, err := c.feed(ctx, pathSaved, page, count)
+	if err != nil {
+		return nil, err
+	}
+	for i := range res.Books {
+		saved := true
+		res.Books[i].Saved = &saved
+	}
+	return res, nil
 }
 
 // DownloadHistory maps GET /eapi/user/book/downloaded. History items get

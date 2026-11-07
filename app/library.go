@@ -33,7 +33,7 @@ func (a *App) libraryPage(c *ui.Context, kind string) {
 	}
 	a.ensureLibrary(kind)
 
-	title, subtitle := "收藏", "你收藏的书。"
+	title, subtitle := "收藏", "你在账户中收藏的书。"
 	switch kind {
 	case "history":
 		title, subtitle = "历史", "最近下载过的书。"
@@ -151,13 +151,19 @@ func (a *App) loadLibrary(kind string, page int) {
 			res, err = a.svc.Favorites(context.Background(), page, count)
 		}
 		a.update(func() {
-			if seq != ls.seq {
+			if seq != ls.seq || a.library[kind] != ls {
 				return
 			}
 			ls.Loading = false
 			ls.Loaded = true
 			if err != nil {
 				ls.Err = friendlyError(err)
+				return
+			}
+			if kind == "favorites" && len(res.Books) == 0 && page > 1 &&
+				(res.TotalPages == 0 || page > res.TotalPages) {
+				// Removing the last book on the last page can shrink pagination.
+				a.loadLibrary(kind, max(1, res.TotalPages))
 				return
 			}
 			ls.Books = res.Books

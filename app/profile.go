@@ -26,6 +26,9 @@ func (a *App) ensureProfile() {
 func (a *App) resetAfterAuthChange() {
 	a.resetProfile()
 	a.library = map[string]*libraryState{}
+	a.resetFavorites()
+	a.detail.Open = false
+	a.detail.Book.Saved = nil
 }
 
 // resetProfile invalidates an in-flight load, so a result from the previous

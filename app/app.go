@@ -33,8 +33,11 @@ type App struct {
 	proxyTest   proxyTestState
 	updateCheck updateCheckState
 
-	detail detailState
-	saved  map[string]bool
+	detail    detailState
+	favorites map[string]*favoriteState
+	// postUpdate lets a headless event loop dispatch worker completions. An
+	// attached native window uses Window.Update instead.
+	postUpdate func(func())
 
 	toastMsg string
 	// notify sends a desktop notification (download complete, ...). It stays
@@ -55,7 +58,7 @@ func New(svc core.Service) *App {
 		path:      ui.NewRouter("/home"),
 		themeName: systemTheme,
 		library:   map[string]*libraryState{},
-		saved:     map[string]bool{},
+		favorites: map[string]*favoriteState{},
 	}
 	a.settings.DownloadDir = defaultDownloadDir()
 	a.settings.Extension = "全部"
@@ -308,11 +311,15 @@ func sidebarPageOf(path string) string {
 	return "/home"
 }
 
-// update runs fn on the main thread and asks for a frame. Before the
-// window exists (unit tests) it runs at once.
+// update dispatches fn on the UI thread. A headless event loop can queue it;
+// without a window or dispatcher it runs immediately.
 func (a *App) update(fn func()) {
 	if a.win != nil {
 		a.win.Update(fn)
+		return
+	}
+	if a.postUpdate != nil {
+		a.postUpdate(fn)
 		return
 	}
 	fn()

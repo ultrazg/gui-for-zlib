@@ -18,11 +18,12 @@ type Demo struct {
 	mu    sync.Mutex
 	email string
 	name  string
+	saved map[string]map[string]bool
 }
 
 // NewDemo returns the sample backend.
 func NewDemo() *Demo {
-	return &Demo{books: demoBooks()}
+	return &Demo{books: demoBooks(), saved: map[string]map[string]bool{}}
 }
 
 func delay(ctx context.Context, d time.Duration) error {
@@ -77,7 +78,73 @@ func (d *Demo) Favorites(ctx context.Context, page, count int) (*BookPage, error
 	if err := delay(ctx, 380*time.Millisecond); err != nil {
 		return nil, err
 	}
-	return pageOf(pick(d.books, 0, 2, 5, 8, 11), page, count), nil
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	saved := d.savedBooksLocked()
+	books := make([]Book, 0, len(saved))
+	for _, book := range d.books {
+		if saved[book.ID] {
+			value := true
+			book.Saved = &value
+			books = append(books, book)
+		}
+	}
+	return pageOf(books, page, count), nil
+}
+
+func (d *Demo) FavoriteStatus(ctx context.Context, book Book) (bool, error) {
+	if err := delay(ctx, 60*time.Millisecond); err != nil {
+		return false, err
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if d.email == "" {
+		return false, ErrNotLoggedIn
+	}
+	return d.savedBooksLocked()[book.ID], nil
+}
+
+func (d *Demo) SetFavorite(ctx context.Context, id string, saved bool) error {
+	id = normalizeDigits(id)
+	if id == "" {
+		return ErrNoID
+	}
+	if err := delay(ctx, 120*time.Millisecond); err != nil {
+		return err
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if d.email == "" {
+		return ErrNotLoggedIn
+	}
+	if saved {
+		d.savedBooksLocked()[id] = true
+	} else {
+		delete(d.savedBooksLocked(), id)
+	}
+	return nil
+}
+
+// savedBooksLocked keeps each demo account's collection across sign-ins.
+func (d *Demo) savedBooksLocked() map[string]bool {
+	account := d.email
+	if account == "" {
+		account = "demo@example.com"
+	}
+	if d.saved == nil {
+		d.saved = map[string]map[string]bool{}
+	}
+	if d.saved[account] == nil {
+		books := map[string]bool{}
+		for _, book := range pick(d.books, 0, 2, 5, 8, 11) {
+			books[book.ID] = true
+		}
+		d.saved[account] = books
+	}
+	return d.saved[account]
 }
 
 func (d *Demo) History(ctx context.Context, page, count int) (*BookPage, error) {
@@ -107,6 +174,7 @@ func (d *Demo) Profile(ctx context.Context) (*Profile, error) {
 	}
 	d.mu.Lock()
 	email, name := d.email, d.name
+	favorites := len(d.savedBooksLocked())
 	d.mu.Unlock()
 	if email == "" {
 		email, name = "demo@example.com", "demo"
@@ -116,7 +184,7 @@ func (d *Demo) Profile(ctx context.Context) (*Profile, error) {
 		Name:           name,
 		DownloadsLeft:  7,
 		DownloadsTotal: 10,
-		Favorites:      5,
+		Favorites:      favorites,
 		Downloads:      23,
 	}, nil
 }

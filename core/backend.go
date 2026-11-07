@@ -308,6 +308,22 @@ func (b *Backend) Favorites(ctx context.Context, page, count int) (*BookPage, er
 	return client.SavedBooks(ctx, page, count)
 }
 
+func (b *Backend) FavoriteStatus(ctx context.Context, book Book) (bool, error) {
+	client, err := b.requireClient()
+	if err != nil {
+		return false, err
+	}
+	return client.FavoriteStatus(ctx, book)
+}
+
+func (b *Backend) SetFavorite(ctx context.Context, id string, saved bool) error {
+	client, err := b.requireClient()
+	if err != nil {
+		return err
+	}
+	return client.SetFavorite(ctx, id, saved)
+}
+
 func (b *Backend) History(ctx context.Context, page, count int) (*BookPage, error) {
 	client, err := b.requireClient()
 	if err != nil {

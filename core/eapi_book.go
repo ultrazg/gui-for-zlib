@@ -307,6 +307,7 @@ func (c *Client) mapEAPIBook(raw map[string]any, fallbackID, fallbackHash string
 		Pages:       eapiInt(pagesText),
 		DownloadURL: downloadURL,
 		Date:        date,
+		Saved:       eapiFlag(raw["_isUserSavedBook"]),
 	}
 }
 

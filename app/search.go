@@ -222,6 +222,8 @@ func friendlyError(err error) string {
 		return "邮箱或密码不正确。"
 	case errors.Is(err, core.ErrSessionExpired):
 		return "会话已过期，请重新登录。"
+	case errors.Is(err, core.ErrFavoriteStateUnknown):
+		return "暂时无法确认收藏状态，请刷新后重试。"
 	case errors.Is(err, core.ErrNoDomain):
 		return "没有可用的镜像：" + err.Error()
 	case errors.Is(err, core.ErrBotProtection):

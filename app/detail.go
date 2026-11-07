@@ -24,8 +24,14 @@ type detailState struct {
 }
 
 func (a *App) showDetail(b core.Book) {
+	if a.detail.Book.ID != b.ID {
+		a.cancelFavoriteRead(a.detail.Book.ID)
+	}
 	a.detail.Book = b
 	a.detail.Open = true
+	if a.session != nil {
+		a.loadFavoriteStatus(b)
+	}
 	key := b.Key()
 	if b.Cover == "" {
 		a.detail.cover = nil
@@ -65,10 +71,9 @@ func (a *App) loadCover(b core.Book, key string) {
 }
 
 func (a *App) detailModal(c *ui.Context) {
-	ui.Modal(c, &a.detail.Open, func() {
+	modal := ui.Modal(c.Key("book-detail"), &a.detail.Open, func() {
 		t := c.Theme()
 		b := a.detail.Book
-		key := b.Key()
 
 		ui.Column(c).Width(560).Gap(12).Children(func() {
 			ui.Row(c).Gap(16).AlignItems(ui.Stretch).Children(func() {
@@ -105,10 +110,6 @@ func (a *App) detailModal(c *ui.Context) {
 				ui.Text(c, b.Description).TextColor(t.TextMuted)
 			}
 
-			if a.saved[key] {
-				ui.Text(c, "已收藏（仅本地标记，不写回账户）").FontSize(12).TextColor(t.Success)
-			}
-
 			ui.Row(c).Gap(10).Justify(ui.End).AlignItems(ui.Center).Children(func() {
 				if a.session == nil {
 					ui.Text(c, "登录后可下载").FontSize(12).TextColor(t.Warning)
@@ -116,18 +117,7 @@ func (a *App) detailModal(c *ui.Context) {
 				if ui.Button(c, "关闭").Clicked() {
 					a.detail.Open = false
 				}
-				saveLabel := "收藏"
-				if a.saved[key] {
-					saveLabel = "取消收藏"
-				}
-				if ui.Button(c, saveLabel).Clicked() {
-					a.saved[key] = !a.saved[key]
-					if a.saved[key] {
-						a.toast("已在本地标记收藏")
-					} else {
-						a.toast("已取消收藏")
-					}
-				}
+				a.favoriteButton(c, b)
 				switch {
 				case a.session == nil:
 					if ui.PrimaryButton(c, "登录后下载").Clicked() {
@@ -143,6 +133,9 @@ func (a *App) detailModal(c *ui.Context) {
 			})
 		})
 	})
+	if modal.Dismissed() || !a.detail.Open {
+		a.cancelFavoriteRead(a.detail.Book.ID)
+	}
 }
 
 // coverBox shows the fetched cover, or a fixed-size placeholder while it is
