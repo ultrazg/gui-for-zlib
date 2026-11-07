@@ -3,5 +3,9 @@
   "identifier": "io.github.gui-for-zlib",
   "version": "0.1.0",
   "out": "build",
+  "icon": "resources/app_icon.png",
+  "macos": {
+    "icon": "resources/app_icon.icon"
+  },
   "urlSchemes": ["zlib"]
 }
