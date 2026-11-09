@@ -1,5 +1,7 @@
 <div align="center">
 
+[English](README.md) · **简体中文**
+
 <h1 align="center">
   <img src="./logo.png" alt="gui-for-zlib" width="200">
   <br>GUI for zlib<br>
