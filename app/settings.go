@@ -18,6 +18,9 @@ type settingsState struct {
 	Extension   string
 	Count       string
 
+	// 下载任务完成时发送桌面通知。
+	NotifyOnDownload bool
+
 	// 网络代理
 	ProxyEnabled bool
 	ProxyScheme  string
@@ -45,7 +48,7 @@ func (a *App) settingsPage(c *ui.Context) {
 	ui.Scroll(c).Grow(1).Padding(24, 28).Gap(16).Children(func() {
 		ui.Text(c, "设置").FontSize(22).Bold()
 		ui.Text(c, "通用").Bold()
-		ui.Text(c, "下载目录、默认格式与每页数量写入 config.json，重启后恢复。").
+		ui.Text(c, "下载目录、默认格式、每页数量与通知开关写入 config.json，重启后恢复。").
 			FontSize(12).TextColor(t.TextMuted)
 
 		ui.Column(c).MaxWidth(640).Gap(12).Children(func() {
@@ -64,6 +67,9 @@ func (a *App) settingsPage(c *ui.Context) {
 				ui.Field(c, "每页数量", func() {
 					ui.TextInput(c, &s.Count).Placeholder("10")
 				}).Description("1–100，用于搜索与列表分页。")
+				ui.Field(c, "下载完成后通知", func() {
+					ui.Switch(c, &s.NotifyOnDownload)
+				}).Description("开启后，下载任务完成时通过系统通知提醒你。")
 			})
 
 			ui.Divider(c)

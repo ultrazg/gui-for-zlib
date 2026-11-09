@@ -80,6 +80,7 @@ func TestBackendGUISettingsRoundTrip(t *testing.T) {	t.Setenv(EnvConfigDir, t.Te
 		ProxyScheme:      "socks5",
 		ProxyAddr:        "127.0.0.1",
 		ProxyPort:        "7890",
+		NotifyOnDownload: true,
 	}
 	if err := NewBackend().SaveGUISettings(want); err != nil {
 		t.Fatalf("SaveGUISettings: %v", err)
@@ -89,7 +90,8 @@ func TestBackendGUISettingsRoundTrip(t *testing.T) {	t.Setenv(EnvConfigDir, t.Te
 	if got.Theme != want.Theme || got.DownloadDir != want.DownloadDir ||
 		got.DefaultExtension != want.DefaultExtension || got.PageCount != want.PageCount ||
 		got.ProxyEnabled != want.ProxyEnabled || got.ProxyScheme != want.ProxyScheme ||
-		got.ProxyAddr != want.ProxyAddr || got.ProxyPort != want.ProxyPort {
+		got.ProxyAddr != want.ProxyAddr || got.ProxyPort != want.ProxyPort ||
+		got.NotifyOnDownload != want.NotifyOnDownload {
 		t.Errorf("GUISettings = %+v, want %+v", got, want)
 	}
 

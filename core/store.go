@@ -90,8 +90,9 @@ type AppConfig struct {
 }
 
 // GUISettings is the slice of config.json the desktop UI persists and
-// restores: theme, download directory, default format, page size and the
-// network proxy. It never carries credentials.
+// restores: theme, download directory, default format, page size, the
+// network proxy and the download-complete notification toggle. It never
+// carries credentials.
 type GUISettings struct {
 	Theme            string `json:"theme,omitempty"`
 	DownloadDir      string `json:"download_dir,omitempty"`
@@ -103,6 +104,9 @@ type GUISettings struct {
 	ProxyScheme  string `json:"proxy_scheme,omitempty"` // "socks5" | "http"
 	ProxyAddr    string `json:"proxy_addr,omitempty"`
 	ProxyPort    string `json:"proxy_port,omitempty"`
+
+	// 下载任务完成时发送桌面通知。
+	NotifyOnDownload bool `json:"notify_on_download,omitempty"`
 }
 
 func LoadAppConfig() *AppConfig {

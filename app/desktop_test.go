@@ -75,13 +75,14 @@ func TestBringToFrontWithoutWindow(t *testing.T) {
 	a.BringToFront() // must not panic
 }
 
-// A finished download fires the desktop notification: the notification ID
-// carries "download-" and the book's id:hash so clicks route to the
-// downloads page, and repeated downloads of the same book replace their
-// notification instead of stacking.
+// A finished download fires the desktop notification when the
+// 下载完成后通知 switch is on: the notification ID carries "download-" and
+// the book's id:hash so clicks route to the downloads page, and repeated
+// downloads of the same book replace their notification instead of stacking.
 func TestDownloadCompletionNotifies(t *testing.T) {
 	a := New(core.NewDemo())
 	a.session = &core.Session{Email: "reader@example.com", Name: "reader"}
+	a.settings.NotifyOnDownload = true
 
 	var gotID, gotTitle, gotBody string
 	a.notify = func(id, title, body string) {
@@ -109,5 +110,32 @@ func TestDownloadCompletionNotifies(t *testing.T) {
 	}
 	if gotBody != "示例书目" {
 		t.Errorf("notification body = %q, want 示例书目", gotBody)
+	}
+}
+
+// With the notification switch off (the default) a finished download only
+// toasts in-app; the desktop notification stays silent.
+func TestDownloadCompletionSilentWhenDisabled(t *testing.T) {
+	a := New(core.NewDemo())
+	a.session = &core.Session{Email: "reader@example.com", Name: "reader"}
+
+	called := false
+	a.notify = func(_, _, _ string) { called = true }
+
+	a.startDownload(core.Book{ID: "1001", Hash: "a1b2c3", Title: "示例书目"})
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if len(a.downloads.Items) > 0 && a.downloads.Items[0].Finished {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("download did not finish within 5s")
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+
+	if called {
+		t.Error("desktop notification fired with 下载完成后通知 off")
 	}
 }

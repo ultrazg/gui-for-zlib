@@ -354,6 +354,7 @@ func (a *App) loadGUISettings() {
 	if cfg.PageCount > 0 {
 		a.settings.Count = strconv.Itoa(cfg.PageCount)
 	}
+	a.settings.NotifyOnDownload = cfg.NotifyOnDownload
 
 	// 网络代理：scheme 默认 socks5 供下拉框显示，地址/端口留空。全新安装时
 	// applySavedProxy 不会用空配置清除环境变量 ZLIB_PROXY 的行为。
@@ -416,6 +417,7 @@ func (a *App) guiSettingsSnapshot() core.GUISettings {
 		ProxyScheme:      a.settings.ProxyScheme,
 		ProxyAddr:        a.settings.ProxyAddr,
 		ProxyPort:        a.settings.ProxyPort,
+		NotifyOnDownload: a.settings.NotifyOnDownload,
 	}
 }
 

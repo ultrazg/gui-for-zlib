@@ -145,7 +145,11 @@ func TestSettingsPersist(t *testing.T) {
 	if err := tt.Click("设置"); err != nil {
 		t.Fatal(err)
 	}
+	if !tt.HasText("下载完成后通知") {
+		t.Errorf("texts %q do not show the download notification toggle", tt.Texts())
+	}
 	a.settings.Count = "25"
+	a.settings.NotifyOnDownload = true
 	if err := tt.Click("保存设置"); err != nil {
 		t.Fatal(err)
 	}
@@ -155,12 +159,18 @@ func TestSettingsPersist(t *testing.T) {
 	if svc.got.Theme != systemTheme {
 		t.Errorf("saved theme = %q, want %q", svc.got.Theme, systemTheme)
 	}
+	if !svc.got.NotifyOnDownload {
+		t.Error("saved NotifyOnDownload = false, want true")
+	}
 
 	// A second app instance started against the same backend restores the
-	// saved page count.
+	// saved page count and notification toggle.
 	a2 := New(svc)
 	if a2.settings.Count != "25" {
 		t.Errorf("restored page count = %q, want 25", a2.settings.Count)
+	}
+	if !a2.settings.NotifyOnDownload {
+		t.Error("restored NotifyOnDownload = false, want true")
 	}
 	_ = a
 }

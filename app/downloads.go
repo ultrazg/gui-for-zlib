@@ -98,7 +98,9 @@ func (a *App) startDownload(b core.Book) {
 				item.Path = path
 				item.Status = "已完成"
 				a.toast("下载完成：" + b.Title)
-				if a.notify != nil {
+				// 系统通知受「设置-通用-下载完成后通知」开关控制；应用内
+				// toast 始终显示。
+				if a.notify != nil && a.settings.NotifyOnDownload {
 					a.notify("download-"+b.Key(), "下载完成", b.Title)
 				}
 			}
