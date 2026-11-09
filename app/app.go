@@ -202,13 +202,13 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 
 		page := sidebarPageOf(a.path.Path())
 		nav := ui.Sidebar(c, &page, func() {
-			ui.SidebarItem(c, "/home", nil, "首页")
-			ui.SidebarItem(c, "/search", nil, "搜索")
-			ui.SidebarItem(c, "/recommended", nil, "推荐")
-			ui.SidebarItem(c, "/popular", nil, "最热")
-			ui.SidebarItem(c, "/favorites", nil, "收藏")
-			ui.SidebarItem(c, "/history", nil, "历史")
-			ui.SidebarItem(c, "/downloads", nil, "下载").Children(func() {
+			ui.SidebarItem(c, "/home", house, "首页")
+			ui.SidebarItem(c, "/search", magnifyingglass, "搜索")
+			ui.SidebarItem(c, "/recommended", star, "推荐")
+			ui.SidebarItem(c, "/popular", trophy, "最热")
+			ui.SidebarItem(c, "/favorites", heart, "收藏")
+			ui.SidebarItem(c, "/history", clock, "历史")
+			ui.SidebarItem(c, "/downloads", squareAndArrowDown, "下载").Children(func() {
 				// A badge counts the downloads still running in the
 				// background; it disappears when none are left.
 				if n := a.activeDownloads(); n > 0 {
@@ -216,9 +216,9 @@ func (a *App) sidebar(c *ui.Context, vibrant bool) {
 				}
 			})
 			ui.SidebarSection(c, "账户与工具", nil, func() {
-				ui.SidebarItem(c, "/profile", nil, "账户")
-				ui.SidebarItem(c, "/doctor", nil, "域名检测")
-				ui.SidebarItem(c, "/settings", nil, "设置")
+				ui.SidebarItem(c, "/profile", personCropCircle, "账户")
+				ui.SidebarItem(c, "/doctor", network, "域名检测")
+				ui.SidebarItem(c, "/settings", gearshape, "设置")
 			})
 		}).Grow(1).Label("主导航")
 		if vibrant {
