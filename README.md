@@ -146,6 +146,11 @@ zlib-gui/
 - [heartleo/zlib](https://github.com/heartleo/zlib) — the Z-Library CLI
 - [mygo](https://github.com/egoist/mygo) — native desktop UI in Go
 
+## License
+
+Released under the [MIT License](LICENSE). Third-party notices are listed in
+[NOTICE](NOTICE).
+
 ## Disclaimer
 
 This project is for learning and lawful personal use only. Do not use it for any copyright-infringing or illegal purposes;

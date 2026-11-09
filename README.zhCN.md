@@ -150,6 +150,10 @@ zlib-gui/
 - [heartleo/zlib](https://github.com/heartleo/zlib) —— Z-Library CLI
 - [mygo](https://github.com/egoist/mygo) —— Go 原生桌面 UI
 
+## 许可证
+
+本项目基于 [MIT License](LICENSE) 发布，第三方声明见 [NOTICE](NOTICE)。
+
 ## 免责声明
 
 本项目仅用于学习与个人合法使用。请勿用于任何侵犯版权、违法的用途；
