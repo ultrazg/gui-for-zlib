@@ -107,7 +107,9 @@ func (a *App) detailModal(c *ui.Context) {
 			if b.Description == "" {
 				ui.Text(c, "暂无简介").TextColor(t.TextMuted)
 			} else {
-				ui.Text(c, b.Description).TextColor(t.TextMuted)
+				ui.Scroll(c).MaxHeight(240).Children(func() {
+					ui.Text(c, b.Description).TextColor(t.TextMuted)
+				})
 			}
 
 			ui.Row(c).Gap(10).Justify(ui.End).AlignItems(ui.Center).Children(func() {

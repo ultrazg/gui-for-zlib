@@ -391,6 +391,28 @@ func TestDetailCoverPlaceholderWhenMissing(t *testing.T) {
 	}
 }
 
+// A long description stays inside the modal: the action row (关闭/下载)
+// keeps within the window instead of being pushed out by the text.
+func TestDetailLongDescriptionStaysInWindow(t *testing.T) {
+	a, tt := newTester(t)
+
+	desc := strings.Repeat("这是一段用来测试简介溢出的长文字。", 120)
+	a.showDetail(core.Book{ID: "9", Hash: "x", Title: "示例书目", Description: desc})
+	tt.Frame()
+
+	if !tt.HasText("这是一段用来测试简介溢出的长文字。") {
+		t.Fatalf("texts %q do not show the description", tt.Texts())
+	}
+	const windowH = 760
+	btn, ok := tt.Find("关闭")
+	if !ok {
+		t.Fatalf("texts %q do not show the close button", tt.Texts())
+	}
+	if btn.Y+btn.H > windowH {
+		t.Errorf("close button bottom %v exceeds the window height %d", btn.Y+btn.H, windowH)
+	}
+}
+
 // With window vibrancy on, the layout still renders: the sidebar drops its
 // surface background and the content pane draws its own, and every page
 // keeps working.

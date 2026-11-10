@@ -74,10 +74,10 @@ func (a *App) finishUpdateCheck(release *core.Release, err error) {
 	case err != nil:
 		a.toast("检查更新失败：" + friendlyError(err))
 	case release == nil:
-		u.Text = "当前已是最新版本（" + u.Current + "）。"
+		a.toast("当前已是最新版本")
 	default:
 		u.Release = *release
-		u.Text = "发现新版本 " + release.TagName
+		a.toast("发现新版本 " + release.TagName)
 		u.Open = true
 	}
 }
@@ -102,7 +102,7 @@ func (a *App) updateModal(c *ui.Context) {
 				}
 			})
 			ui.Row(c).Gap(12).Justify(ui.End).AlignItems(ui.Center).Children(func() {
-				ui.Link(c, "前往 GitHub 发布页", u.Release.URL())
+				ui.Link(c, "前往 GitHub 发布页下载", u.Release.URL())
 				ui.Button(c, "关闭").OnClick(func() { u.Open = false })
 			})
 		})

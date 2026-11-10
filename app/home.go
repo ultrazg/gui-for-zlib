@@ -138,6 +138,13 @@ func (a *App) profilePage(c *ui.Context) {
 					a.statCard(c, "今日下载", fmt.Sprint(p.Downloads))
 					a.statCard(c, "剩余配额", fmt.Sprint(p.DownloadsLeft))
 				})
+				ui.Button(c, "").OnClick(a.loadProfile).Width(80).Disabled(a.profile.Loading).Children(func() {
+					if a.profile.Loading {
+						ui.Spinner(c)
+					} else {
+						ui.Text(c, "刷新")
+					}
+				})
 			}
 		}
 	})
