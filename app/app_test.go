@@ -347,7 +347,8 @@ func (s *coverSvc) FetchImage(ctx context.Context, url string) ([]byte, error) {
 // book reuses the cached cover instead of refetching.
 func TestDetailCoverLoads(t *testing.T) {
 	svc := &coverSvc{Demo: core.NewDemo()}
-	a, _ := newTesterWith(t, svc)
+	h := newDetailUI(t, svc)
+	a := h.a
 
 	b := core.Book{ID: "1", Hash: "h", Title: "示例书目", Cover: "https://example.com/c.jpg"}
 	a.showDetail(b)
@@ -355,13 +356,7 @@ func TestDetailCoverLoads(t *testing.T) {
 		t.Fatal("cover marked done before the fetch settled")
 	}
 
-	deadline := time.Now().Add(3 * time.Second)
-	for !a.detail.coverDone {
-		if time.Now().After(deadline) {
-			t.Fatal("cover did not load within 3s")
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+	h.settleCover(t)
 	if a.detail.cover == nil {
 		t.Fatal("cover was not decoded")
 	}

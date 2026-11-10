@@ -37,3 +37,10 @@ type Service interface {
 	// catchable by ui.DecodeBitmap.
 	FetchImage(ctx context.Context, url string) ([]byte, error)
 }
+
+// BookFetcher is an optional Service capability for refreshing metadata that
+// list endpoints omit, such as covers in download history. Demo services can
+// keep showing placeholders without providing a separate detail endpoint.
+type BookFetcher interface {
+	FetchBook(ctx context.Context, id, hash string) (*Book, error)
+}

@@ -3,9 +3,45 @@ package core
 import (
 	"context"
 	"errors"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 )
+
+func TestBackendHistoryCoverDetails(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case pathDownloaded:
+			_, _ = io.WriteString(w, `{"success":1,"books":[{"id":42,"hash":"h","title":"Dune","cover":null,"date":"2026-11-10"}]}`)
+		case "/eapi/book/42/h":
+			_, _ = io.WriteString(w, `{"success":1,"book":{"title":"Dune","cover":"/covers/current.jpg"}}`)
+		default:
+			t.Errorf("unexpected request: %s", r.URL.Path)
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	b := &Backend{client: testClient(t, srv.URL)}
+	page, err := b.History(context.Background(), 1, 10)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(page.Books) != 1 || page.Books[0].Cover != "" {
+		t.Fatalf("history summary = %+v", page.Books)
+	}
+	var fetcher BookFetcher = b
+	details, err := fetcher.FetchBook(context.Background(), page.Books[0].ID, page.Books[0].Hash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if details.Key() != page.Books[0].Key() || details.Cover != srv.URL+"/covers/current.jpg" {
+		t.Fatalf("resolved history details = %+v", details)
+	}
+}
 
 func TestBackendRestoresSessionAndLogsOut(t *testing.T) {
 	t.Setenv(EnvConfigDir, t.TempDir())
@@ -67,7 +103,8 @@ func TestBackendRequiresLoginForLists(t *testing.T) {
 	}
 }
 
-func TestBackendGUISettingsRoundTrip(t *testing.T) {	t.Setenv(EnvConfigDir, t.TempDir())
+func TestBackendGUISettingsRoundTrip(t *testing.T) {
+	t.Setenv(EnvConfigDir, t.TempDir())
 	t.Setenv(EnvDomain, "https://z-lib.gd")
 	t.Setenv(EnvProxy, "")
 

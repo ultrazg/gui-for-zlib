@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/egoist/mygo/ui"
 
@@ -13,17 +15,19 @@ type detailState struct {
 	Open bool
 	Book core.Book
 
-	// cover caches the fetched cover bitmap for the current book. key
-	// identifies the book it belongs to; done means the fetch settled, so a
-	// reopened book is not refetched. Cover URLs are empty in the demo
-	// backend, which shows the placeholder instead.
-	cover     *ui.Bitmap
-	coverKey  string
-	coverDone bool
-	coverSeq  uint64
+	// Cache by book and source URL, including covers resolved from details.
+	// Failed loads settle too, but are retried when the book is reopened.
+	cover       *ui.Bitmap
+	coverKey    string
+	coverSource string
+	coverDone   bool
+	coverErr    error
+	coverSeq    uint64
+	coverCancel context.CancelFunc
 }
 
 func (a *App) showDetail(b core.Book) {
+	b.Cover = strings.TrimSpace(b.Cover)
 	if a.detail.Book.ID != b.ID {
 		a.cancelFavoriteRead(a.detail.Book.ID)
 	}
@@ -33,41 +37,89 @@ func (a *App) showDetail(b core.Book) {
 		a.loadFavoriteStatus(b)
 	}
 	key := b.Key()
-	if b.Cover == "" {
-		a.detail.cover = nil
-		a.detail.coverKey = key
-		a.detail.coverDone = true
+	d := &a.detail
+	if d.coverKey == key && d.coverSource == b.Cover && (!d.coverDone || d.coverErr == nil) {
 		return
 	}
-	if a.detail.coverKey != key || !a.detail.coverDone {
-		a.loadCover(b, key)
-	}
+	a.loadCover(b, key)
 }
 
 // loadCover fetches and decodes the cover off the main thread; a stale
 // result (a newer book opened first) is dropped by the sequence number.
 func (a *App) loadCover(b core.Book, key string) {
 	d := &a.detail
+	if d.coverCancel != nil {
+		d.coverCancel()
+		d.coverCancel = nil
+	}
 	d.coverSeq++
 	seq := d.coverSeq
 	d.coverKey = key
+	d.coverSource = b.Cover
 	d.cover = nil
 	d.coverDone = false
+	d.coverErr = nil
 
-	rawURL := b.Cover
+	_, canFetchDetails := a.svc.(core.BookFetcher)
+	if b.Cover == "" && (!canFetchDetails || b.ID == "" || b.Hash == "") {
+		d.coverDone = true
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	d.coverCancel = cancel
 	go func() {
-		data, err := a.svc.FetchImage(context.Background(), rawURL)
-		var bm *ui.Bitmap
-		if err == nil {
-			bm, err = ui.DecodeBitmap(data)
-		}
+		bm, err := a.fetchCover(ctx, b)
+		cancel()
 		a.update(func() {
 			if seq == d.coverSeq && d.coverKey == key {
 				d.cover = bm
 				d.coverDone = true
+				d.coverErr = err
+				d.coverCancel = nil
 			}
 		})
 	}()
+}
+
+// History can omit covers or retain an expired URL. Ask for the current book
+// metadata only when the list's cover is missing or could not be decoded.
+func (a *App) fetchCover(ctx context.Context, b core.Book) (*ui.Bitmap, error) {
+	var err error
+	if b.Cover != "" {
+		var bm *ui.Bitmap
+		bm, err = a.fetchCoverBitmap(ctx, b.Cover)
+		if err == nil {
+			return bm, nil
+		}
+	}
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	fetcher, ok := a.svc.(core.BookFetcher)
+	if !ok || b.ID == "" || b.Hash == "" {
+		return nil, err
+	}
+	details, detailErr := fetcher.FetchBook(ctx, b.ID, b.Hash)
+	if detailErr != nil {
+		return nil, detailErr
+	}
+	if details == nil {
+		return nil, fmt.Errorf("book detail response is empty")
+	}
+	coverURL := strings.TrimSpace(details.Cover)
+	if coverURL == "" || coverURL == b.Cover {
+		return nil, err
+	}
+	return a.fetchCoverBitmap(ctx, coverURL)
+}
+
+func (a *App) fetchCoverBitmap(ctx context.Context, rawURL string) (*ui.Bitmap, error) {
+	data, err := a.svc.FetchImage(ctx, rawURL)
+	if err != nil {
+		return nil, err
+	}
+	return ui.DecodeBitmap(data)
 }
 
 func (a *App) detailModal(c *ui.Context) {

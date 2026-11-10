@@ -332,6 +332,15 @@ func (b *Backend) History(ctx context.Context, page, count int) (*BookPage, erro
 	return client.DownloadHistory(ctx, page, count)
 }
 
+// FetchBook refreshes a list item's metadata through the session client.
+func (b *Backend) FetchBook(ctx context.Context, id, hash string) (*Book, error) {
+	client, err := b.requireClient()
+	if err != nil {
+		return nil, err
+	}
+	return client.FetchBook(ctx, id, hash)
+}
+
 func (b *Backend) Recommended(ctx context.Context, page, count int) (*BookPage, error) {
 	client, err := b.requireClient()
 	if err != nil {
