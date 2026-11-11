@@ -85,6 +85,70 @@ func TestBackendRestoresSessionAndLogsOut(t *testing.T) {
 	}
 }
 
+// TestBackendRestoresSessionName persists the nickname from login so the
+// sidebar keeps it after a restart, instead of reverting to the email's
+// local part.
+func TestBackendRestoresSessionName(t *testing.T) {
+	t.Setenv(EnvConfigDir, t.TempDir())
+	t.Setenv(EnvDomain, "https://z-lib.gd")
+	t.Setenv(EnvProxy, "")
+
+	if err := SaveSession(&SessionFile{
+		Cookies: map[string]string{"remix_userid": "7", "remix_userkey": "key"},
+		Domain:  "https://z-lib.gd",
+		Mode:    "eapi",
+		Name:    "书虫",
+	}); err != nil {
+		t.Fatalf("SaveSession: %v", err)
+	}
+	if err := SaveAppConfig(&AppConfig{LastLoginEmail: "reader@example.com"}); err != nil {
+		t.Fatalf("SaveAppConfig: %v", err)
+	}
+
+	b := NewBackend()
+	session := b.CurrentSession()
+	if session == nil {
+		t.Fatal("session was not restored")
+	}
+	if session.Name != "书虫" {
+		t.Errorf("restored name = %q, want 书虫", session.Name)
+	}
+}
+
+// TestBackendUpdateSessionName repairs a session saved before the nickname
+// was persisted, so the next start shows it instead of the email prefix.
+func TestBackendUpdateSessionName(t *testing.T) {
+	t.Setenv(EnvConfigDir, t.TempDir())
+	t.Setenv(EnvDomain, "https://z-lib.gd")
+	t.Setenv(EnvProxy, "")
+
+	if err := SaveSession(&SessionFile{
+		Cookies: map[string]string{"remix_userid": "7", "remix_userkey": "key"},
+		Domain:  "https://z-lib.gd",
+		Mode:    "eapi",
+	}); err != nil {
+		t.Fatalf("SaveSession: %v", err)
+	}
+	if err := SaveAppConfig(&AppConfig{LastLoginEmail: "reader@example.com"}); err != nil {
+		t.Fatalf("SaveAppConfig: %v", err)
+	}
+
+	b := NewBackend()
+	if err := b.UpdateSessionName("书虫"); err != nil {
+		t.Fatalf("UpdateSessionName: %v", err)
+	}
+	if got := b.CurrentSession().Name; got != "书虫" {
+		t.Errorf("in-memory name = %q", got)
+	}
+	saved, err := LoadSession()
+	if err != nil {
+		t.Fatalf("LoadSession: %v", err)
+	}
+	if saved.Name != "书虫" {
+		t.Errorf("persisted name = %q", saved.Name)
+	}
+}
+
 func TestBackendRequiresLoginForLists(t *testing.T) {
 	t.Setenv(EnvConfigDir, t.TempDir())
 	t.Setenv(EnvDomain, "https://z-lib.gd")

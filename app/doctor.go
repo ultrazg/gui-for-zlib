@@ -64,7 +64,7 @@ func (a *App) doctorPage(c *ui.Context) {
 
 	ui.Scroll(c).Grow(1).Padding(24, 28).Gap(14).Children(func() {
 		ui.Text(c, "域名检测").FontSize(22).Bold()
-		ui.Text(c, "并发探测候选镜像的 EAPI 可用性，不携带账号凭据。").
+		ui.Text(c, fmt.Sprintf("并发探测候选镜像的 EAPI 可用性，不携带账号凭据。当前镜像：%s", a.domain)).
 			FontSize(12).TextColor(t.TextMuted)
 
 		ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {

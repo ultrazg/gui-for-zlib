@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strings"
 
 	"zlib-gui/core"
 )
@@ -61,6 +62,31 @@ func (a *App) loadProfile() {
 				return
 			}
 			p.Data = profile
+			a.adoptProfileName(profile.Name)
 		})
 	}()
+}
+
+// adoptProfileName replaces the placeholder a restored session carries (the
+// email's local part, or nothing) with the server's nickname, and asks the
+// backend to persist it so the next start opens on the right name.
+func (a *App) adoptProfileName(name string) {
+	name = strings.TrimSpace(name)
+	if a.session == nil || name == "" || name == a.session.Name {
+		return
+	}
+	if a.session.Name != "" && !strings.EqualFold(a.session.Name, emailLocalPart(a.session.Email)) {
+		return
+	}
+	a.session.Name = name
+	if s, ok := a.svc.(interface{ UpdateSessionName(string) error }); ok {
+		_ = s.UpdateSessionName(name)
+	}
+}
+
+func emailLocalPart(email string) string {
+	if i := strings.IndexByte(email, '@'); i > 0 {
+		return email[:i]
+	}
+	return email
 }

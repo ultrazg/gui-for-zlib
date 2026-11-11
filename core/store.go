@@ -29,11 +29,13 @@ func AppConfigPath() string { return filepath.Join(ConfigDir(), "config.json") }
 func DotEnvPath() string    { return filepath.Join(ConfigDir(), ".env") }
 
 // SessionFile is session.json. Cookies are the only credential material;
-// the password never reaches this file.
+// the password never reaches this file. Name mirrors the display name the
+// GUI shows for the account, so a nickname survives a restart.
 type SessionFile struct {
 	Cookies map[string]string `json:"cookies"`
 	Domain  string            `json:"domain"`
 	Mode    string            `json:"mode"`
+	Name    string            `json:"name,omitempty"`
 }
 
 // LoadSession reads session.json. A missing file is reported as

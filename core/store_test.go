@@ -25,6 +25,7 @@ func TestSessionRoundTrip(t *testing.T) {
 		Cookies: map[string]string{"remix_userid": "7", "remix_userkey": "k"},
 		Domain:  "https://z-lib.gd",
 		Mode:    "eapi",
+		Name:    "书虫",
 	}
 	if err := SaveSession(want); err != nil {
 		t.Fatalf("SaveSession: %v", err)
@@ -33,7 +34,7 @@ func TestSessionRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadSession: %v", err)
 	}
-	if got.Domain != want.Domain || got.Cookies["remix_userkey"] != "k" {
+	if got.Domain != want.Domain || got.Cookies["remix_userkey"] != "k" || got.Name != "书虫" {
 		t.Errorf("session = %+v", got)
 	}
 

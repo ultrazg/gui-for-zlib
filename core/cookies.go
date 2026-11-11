@@ -111,10 +111,17 @@ func (b *Backend) ImportCookiesFile(path, domain string) (*Session, error) {
 	}
 	b.client.SetCookies(cookies)
 
+	email := b.LastLoginEmail()
+	name := localPart(email)
+	if name == "" {
+		name = "Cookie 会话"
+	}
+
 	saved := &SessionFile{
 		Cookies: b.client.Cookies(),
 		Domain:  b.client.Domain(),
 		Mode:    "eapi",
+		Name:    name,
 	}
 	if err := SaveSession(saved); err != nil {
 		b.client.Logout()
@@ -122,11 +129,6 @@ func (b *Backend) ImportCookiesFile(path, domain string) (*Session, error) {
 	}
 	_ = PersistDotEnv(EnvDomain, b.client.Domain())
 
-	email := b.LastLoginEmail()
-	name := localPart(email)
-	if name == "" {
-		name = "Cookie 会话"
-	}
 	session := &Session{Email: email, Name: name}
 	b.sessionMu.Lock()
 	b.session = session

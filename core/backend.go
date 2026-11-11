@@ -102,9 +102,14 @@ func (b *Backend) restoreSession() {
 	}
 
 	email := b.appCfg.LastLoginEmail
-	name := localPart(email)
+	name := saved.Name
 	if name == "" {
-		name = "已登录"
+		// Sessions written before Name was persisted, and cookie imports,
+		// carry no display name; the email's local part is the best guess.
+		name = localPart(email)
+		if name == "" {
+			name = "已登录"
+		}
 	}
 	b.sessionMu.Lock()
 	b.session = &Session{Email: email, Name: name}
@@ -120,6 +125,38 @@ func (b *Backend) CurrentSession() *Session {
 	}
 	copy := *b.session
 	return &copy
+}
+
+// UpdateSessionName remembers the account's display name once the profile
+// reports it. It repairs sessions saved before the name was persisted, so a
+// restart does not fall back to the email's local part.
+func (b *Backend) UpdateSessionName(name string) error {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return nil
+	}
+	b.loginMu.Lock()
+	defer b.loginMu.Unlock()
+
+	b.sessionMu.Lock()
+	if b.session == nil {
+		b.sessionMu.Unlock()
+		return nil
+	}
+	changed := b.session.Name != name
+	b.session.Name = name
+	b.sessionMu.Unlock()
+	if !changed {
+		return nil
+	}
+
+	saved, err := LoadSession()
+	if err != nil {
+		// Signed out in the meantime; nothing to update.
+		return nil
+	}
+	saved.Name = name
+	return SaveSession(saved)
 }
 
 // LastLoginEmail is used by the login form's prefill.
@@ -213,6 +250,7 @@ func (b *Backend) Login(ctx context.Context, email, password string) (*Session, 
 		Cookies: b.client.Cookies(),
 		Domain:  b.client.Domain(),
 		Mode:    "eapi",
+		Name:    session.Name,
 	}
 	if err := SaveSession(saved); err != nil {
 		// Do not leave the client half-signed-in with cookies the GUI
