@@ -138,7 +138,7 @@ func (a *App) searchPage(c *ui.Context) {
 			a.showDetail(s.Books[s.Selected])
 		}
 
-		if !s.Loading && s.Started && len(s.Books) == 0 {
+		if !s.Loading && s.Started && s.Err == "" && strings.TrimSpace(s.Query) != "" && len(s.Books) == 0 {
 			ui.Text(c, "没有匹配的书，换个关键词试试。").
 				Padding(12).TextColor(t.TextMuted)
 		}
