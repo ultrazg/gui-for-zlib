@@ -26,7 +26,7 @@ func (a *App) homePage(c *ui.Context) {
 		ui.Row(c).Gap(14).AlignItems(ui.Stretch).Children(func() {
 			a.homeCard(c, "账户", func() {
 				if a.session != nil {
-					ui.Text(c, a.session.Email).Bold().SingleLine()
+					ui.Text(c, a.session.Name).Bold().SingleLine()
 					ui.Text(c, "已登录").FontSize(12).TextColor(t.Success)
 				} else {
 					ui.Text(c, "未登录").Bold()
