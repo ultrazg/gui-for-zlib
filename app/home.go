@@ -105,6 +105,13 @@ func (a *App) profilePage(c *ui.Context) {
 				ui.Text(c, a.session.Name).FontSize(22).Bold()
 				ui.Text(c, a.session.Email).FontSize(12).TextColor(t.TextMuted)
 			})
+			ui.Button(c, "").OnClick(a.loadProfile).FontSize(12).Disabled(a.profile.Loading).Children(func() {
+				if a.profile.Loading {
+					ui.Spinner(c)
+				} else {
+					ui.Text(c, "刷新")
+				}
+			})
 		})
 
 		if a.profile.Loading {
@@ -137,13 +144,6 @@ func (a *App) profilePage(c *ui.Context) {
 					a.statCard(c, "每日配额", fmt.Sprint(p.DownloadsTotal))
 					a.statCard(c, "今日下载", fmt.Sprint(p.Downloads))
 					a.statCard(c, "剩余配额", fmt.Sprint(p.DownloadsLeft))
-				})
-				ui.Button(c, "").OnClick(a.loadProfile).Width(80).Disabled(a.profile.Loading).Children(func() {
-					if a.profile.Loading {
-						ui.Spinner(c)
-					} else {
-						ui.Text(c, "刷新")
-					}
 				})
 			}
 		}
